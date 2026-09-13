@@ -7,12 +7,21 @@
 <title>Mojibake — a font guessing game</title>
 <meta name="description" content="The word is the name of a font. It is set in a different one. Name the typeface you can actually see.">
 
-<meta property="og:title" content="Mojibake">
+<meta property="og:title" content="Mojibake — a font guessing game">
 <meta property="og:description" content="The word is the name of a font. It is set in a different one. Name the typeface you can actually see.">
 <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
+<meta property="og:url" content="https://mojibake.justinewin.com/">
+<meta property="og:image" content="https://mojibake.justinewin.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mojibake.justinewin.com/og.png">
 
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%236f2f96'/><text y='12' x='8' text-anchor='middle' font-size='11' fill='%23ffd23f' font-family='monospace'>M</text></svg>">
+<!-- Real files rather than a data URI: Safari is strict about SVG data URIs,
+     and /favicon.ico is requested by convention whatever the markup says. -->
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="styles.css">
@@ -115,6 +124,9 @@
   <span class="startbtn"><span class="startlogo" aria-hidden="true"></span>Start</span>
   <span class="task">&#x6587; mojibake.exe</span>
   <button class="task task-btn" type="button" id="np-task" hidden>notepad.exe</button>
+  <button class="tray-btn" id="theme" type="button">
+    <span class="sr">Theme</span>
+  </button>
   <button class="tray-btn" id="sound" type="button" aria-pressed="false">
     <span id="sound-ico" aria-hidden="true">&#x266A;</span>
     <span class="sr">Sound</span>

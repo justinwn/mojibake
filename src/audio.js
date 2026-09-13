@@ -41,11 +41,12 @@ export function createAudio() {
     clearTimeout(stopTimer);
     stopTimer = 0;
     if (current) {
-      current.pause();
+      // pause() and seeking both throw on iOS in states desktop never hits.
       try {
+        current.pause();
         current.currentTime = 0;
       } catch {
-        /* Seeking before metadata arrives throws in some browsers. */
+        /* Nothing here is worth propagating to a caller mid-interaction. */
       }
       current = null;
     }
@@ -80,6 +81,7 @@ export function createAudio() {
       } catch {
         /* As above. */
       }
+      if (typeof a.play !== "function") return;
       // Browsers refuse audio until the page has seen a user gesture, so the
       // title music on a cold load is blocked. Remember it and start it on the
       // very next interaction instead of dropping it.
@@ -88,7 +90,11 @@ export function createAudio() {
         () => { pending = name; }
       );
       stopTimer = setTimeout(() => {
-        a.pause();
+        try {
+          a.pause();
+        } catch {
+          /* Element may already be torn down. */
+        }
         current = null;
       }, clip.end * 1000);
     },

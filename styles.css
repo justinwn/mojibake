@@ -148,6 +148,13 @@
 
 * { box-sizing: border-box; }
 
+/* Without this iOS keeps the double-tap-zoom heuristic alive on every control,
+   which makes taps feel unresponsive or drop entirely. */
+button, .opt, .btn, .dicon-btn, .winbtn, .task-btn, .tray-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -318,9 +325,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 30px;
   background: var(--paper);
   z-index: 2;
+  /* Keeps the message clear of the lane the heart rises through. */
+  padding-bottom: 52px;
 }
 
 /* Shown, not performed: the face simply appears, centred. */
@@ -334,10 +343,8 @@ body {
 
 .miss .msg {
   font-family: var(--ui);
-  font-size: clamp(18px, 3.6vw, 28px);
-  letter-spacing: 0.08em;
-  color: var(--bad);
-  text-transform: uppercase;
+  font-size: clamp(17px, 3.4vw, 26px);
+  color: var(--paper-ink);
 }
 
 /* Both pops rise from the foot of the canvas: one shared gesture for gain and
@@ -355,7 +362,15 @@ body {
 }
 
 .pop.gain { color: var(--good); }
-.pop.loss { color: var(--bad); }
+
+.pop.loss {
+  color: var(--bad);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pop-heart { width: 0.95em; height: auto; display: block; }
 
 @keyframes floatUp {
   0%   { transform: translate(-50%, 26px) scale(0.72); opacity: 0; }
@@ -1021,7 +1036,6 @@ body {
 }
 
 .tray-btn {
-  margin-left: auto;
   width: 30px;
   height: 100%;
   display: grid;
@@ -1035,6 +1049,11 @@ body {
   border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
   box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
 }
+
+/* Only the first of the tray buttons pushes the group right. */
+#theme { margin-left: auto; }
+
+.tray-btn svg { width: 15px; height: 15px; display: block; }
 
 .tray-btn.off { color: var(--ink-soft); }
 

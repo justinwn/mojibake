@@ -10,7 +10,8 @@ import {
 } from "./sharecard.js";
 import { createAudio } from "./audio.js";
 import {
-  sprite, SAD_FACE, HEART, HEART_EMPTY, TROPHY, SPARKLE, STAR, DESKTOP_ICONS,
+  sprite, SAD_FACE, HEART, HEART_EMPTY, TROPHY, SPARKLE, STAR, SUN, MOON,
+  DESKTOP_ICONS,
 } from "./pixel.js";
 import { DOCS, DEFAULT_DOC } from "./legal.js";
 
@@ -25,6 +26,7 @@ const el = {
   time: $("s-time"), bar: $("s-bar"),
   taskbar: $("taskbar"), clock: $("clock"),
   icons: $("desktop-icons"), sound: $("sound"), soundIco: $("sound-ico"),
+  theme: $("theme"),
   notepad: $("notepad"), npTabs: $("np-tabs"), npBody: $("np-body"),
   npUrl: $("np-url"), npTitle: $("np-title"), npTask: $("np-task"),
   npMin: $("np-min"), npClose: $("np-close"),
@@ -116,6 +118,41 @@ function syncNotepadToHash() {
   const match = Object.keys(DOCS).find((k) => DOCS[k].slug === slug);
   if (match) openNotepad(match);
   else if (npOpen) closeNotepad();
+}
+
+/* ---------------- theme ---------------- */
+
+const THEME_KEY = "mojibake.theme";
+
+/** The theme actually in effect: an explicit choice, else the system's. */
+function currentTheme() {
+  const stored = (() => {
+    try { return localStorage.getItem(THEME_KEY); } catch { return null; }
+  })();
+  if (stored === "light" || stored === "dark") return stored;
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function paintTheme() {
+  const now = currentTheme();
+  document.documentElement.setAttribute("data-theme", now);
+  const next = now === "dark" ? "light" : "dark";
+  el.theme.textContent = "";
+  // The icon shows what you get by pressing it, not the state you are in.
+  el.theme.appendChild(sprite(next === "dark" ? MOON : SUN));
+  const label = h("span", "sr", `Switch to ${next} mode`);
+  el.theme.appendChild(label);
+  el.theme.title = `Switch to ${next} mode`;
+}
+
+function toggleTheme() {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    /* The choice still applies for this visit. */
+  }
+  paintTheme();
 }
 
 function paintSound() {
@@ -240,10 +277,12 @@ function renderOptions(round, { disabled = false } = {}) {
   });
 }
 
-function popup(text, kind) {
+function popup(content, kind) {
   const d = document.createElement("div");
   d.className = "pop " + kind;
-  d.textContent = text;
+  // A string for the score, or nodes when the pop carries a sprite.
+  if (typeof content === "string") d.textContent = content;
+  else d.append(...content);
   el.canvas.appendChild(d);
   setTimeout(() => d.remove(), 1200);
 }
@@ -322,7 +361,12 @@ function onResolved(info) {
     showMiss(info.timedOut
       ? "Time's up."
       : WRONG_MESSAGES[Math.floor(Math.random() * WRONG_MESSAGES.length)]);
-    popup("−💔", "loss");
+    // The game's own pixel heart rather than the system emoji, which renders
+    // differently on every platform and never matched the art.
+    popup([
+      h("span", null, "\u2212"),
+      sprite(HEART, { cls: "pop-heart" }),
+    ], "loss");
     if (!reduceMotion) {
       el.win.classList.add("shake");
       setTimeout(() => el.win.classList.remove("shake"), 400);
@@ -479,8 +523,15 @@ function startGame() {
 /** Start a new run from a "Play again" button: the title music stands in for
     the start screen the player is skipping past. */
 function playAgain() {
-  sfx.play("start");
+  // Start the run FIRST. Audio is a garnish, and iOS throws from media calls in
+  // states desktop never reaches -- if that happened before startGame(), the
+  // button silently did nothing.
   startGame();
+  try {
+    sfx.play("start");
+  } catch {
+    /* No cue is worth a dead button. */
+  }
 }
 
 function showTitle() {
@@ -546,7 +597,16 @@ async function boot() {
 // first frame, not wait on fonts.json.
 startClock();
 renderDesktopIcons();
+paintTheme();
 paintSound();
+el.theme.addEventListener("click", toggleTheme);
+
+// Follow the system until the player states a preference of their own.
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  let stored = null;
+  try { stored = localStorage.getItem(THEME_KEY); } catch { /* ignore */ }
+  if (!stored) paintTheme();
+});
 
 el.npMin.addEventListener("click", minimizeNotepad);
 el.npClose.addEventListener("click", closeNotepad);

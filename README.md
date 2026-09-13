@@ -37,6 +37,7 @@ Then open <http://localhost:4179>. A plain static server works too, but `devserv
 
 ```bash
 node tools/check_imports.mjs # every named import resolves (no build step to catch this)
+node tools/build_icons.mjs   # regenerate the favicons from the pixel grid
 node tools/test_replay.mjs   # scoring and round-generation regression tests
 python3 tools/build_pool.py  # regenerate fonts.json from the Google Fonts catalog
 ```
@@ -60,6 +61,7 @@ src/legal.js        Privacy and Terms copy
 src/pixel.js        pixel-art sprites, drawn from character grids
 src/audio.js        sound clips
 tools/              build + test scripts
+icon.svg, og.png    mark and link-preview image (see tools/build_icons.mjs)
 ```
 
 ### Two details worth knowing

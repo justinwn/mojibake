@@ -16,6 +16,8 @@ const PALETTE = {
   N: "var(--px-gold-lt)",
   D: "var(--px-gold-dk)",
   A: "var(--px-spark)",
+  // Inherits the element's colour, so taskbar icons follow the theme.
+  I: "currentColor",
 };
 
 /** Build an <svg> from a grid of characters. "." is transparent. */
@@ -219,6 +221,30 @@ export const TROPHY = [
   "...KKKOOOOKKK...",
   "...KNNNNNNNNK...",
   "...KKKKKKKKKK...",
+];
+
+export const SUN = [
+  "....I....",
+  "I...I...I",
+  ".I.III.I.",
+  "..IIIII..",
+  "III...III",
+  "..IIIII..",
+  ".I.III.I.",
+  "I...I...I",
+  "....I....",
+];
+
+export const MOON = [
+  "..III....",
+  ".II......",
+  "II.......",
+  "II.......",
+  "II.......",
+  "II.......",
+  "II.......",
+  ".II......",
+  "..III....",
 ];
 
 export const STAR = [
