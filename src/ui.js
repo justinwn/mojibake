@@ -142,6 +142,14 @@ const FEEDBACK_MS = reduceMotion ? 450 : 1100;
 
 // Picked with Math.random, deliberately NOT the seeded round generator: these
 // are cosmetic, and drawing from that stream would desync replay validation.
+// Shown instead of "NICELY DONE!" when the run never scored -- congratulating
+// a zero reads as sarcasm.
+const ZERO_HEADLINES = [
+  "TRY AGAIN!",
+  "YOU CAN DO IT!",
+  "ONE MORE GO!",
+];
+
 const WRONG_MESSAGES = [
   "Ooops, wrong guess.",
   "Try again next time.",
@@ -333,6 +341,7 @@ function onResolved(info) {
 function sheet(build) {
   el.sheet.textContent = "";
   el.sheet.classList.remove("hidden");
+  el.canvas.classList.add("sheeted");
   const inner = document.createElement("div");
   inner.className = "sheetin";
   el.sheet.appendChild(inner);
@@ -341,6 +350,7 @@ function sheet(build) {
 
 function hideSheet() {
   el.sheet.classList.add("hidden");
+  el.canvas.classList.remove("sheeted");
   el.sheet.textContent = "";
 }
 
@@ -359,6 +369,7 @@ function showGameOver() {
   const elapsedMs = run.submittedAt - run.startedAt;
   const tier = tierForRound(rounds);
   const { best, isNew } = recordRun(finalScore, rounds);
+  el.options.textContent = "";
 
   sfx.play(finalScore > 0 ? "score" : "gameover");
 
@@ -381,18 +392,25 @@ function showGameOver() {
 
     const col = h("div", "result-text");
     const beat = isNew && finalScore > 0;
-    col.appendChild(h("h2", null, beat ? "NEW PERSONAL BEST!" : "NICELY DONE!"));
+    let headline;
+    if (finalScore === 0) {
+      headline = ZERO_HEADLINES[Math.floor(Math.random() * ZERO_HEADLINES.length)];
+    } else {
+      headline = beat ? "NEW PERSONAL BEST!" : "NICELY DONE!";
+    }
+    col.appendChild(h("h2", null, headline));
     col.appendChild(h("div", "bigscore", finalScore.toLocaleString("en-US")));
     const plural = rounds === 1 ? "" : "s";
     col.appendChild(h("p", "runline",
       `${rounds} round${plural} in ${formatElapsed(elapsedMs)}`));
     // The headline already says it when they beat it; this line is for when
     // they did not.
-    if (!beat) {
+    // Nothing to beat yet is not worth a line that reads "Personal best: 0".
+    if (!beat && best && best.score > 0) {
       const bestLine = h("p", "muted bestline");
       bestLine.appendChild(sprite(STAR, { cls: "star" }));
       bestLine.appendChild(h("span", null,
-        `Personal best: ${best ? best.score.toLocaleString("en-US") : 0}`));
+        `Personal best: ${best.score.toLocaleString("en-US")}`));
       col.appendChild(bestLine);
     }
     row.appendChild(col);
@@ -426,11 +444,7 @@ function showGameOver() {
       share.disabled = false;
       share.addEventListener("click", () => {
         shareNow(mode, { file, blob, score: finalScore }).then(
-          (what) => {
-            if (what === "downloaded") {
-              note.textContent = "Saved to your downloads.";
-            }
-          },
+          () => {},
           (err) => {
             // Dismissing the OS dialog is a normal outcome, not a failure.
             if (err && err.name === "AbortError") return;
@@ -479,7 +493,7 @@ function showTitle() {
 
   sheet((s) => {
     s.appendChild(h("h2", null, "MOJIBAKE"));
-    s.appendChild(h("p", null, "A font guessing game"));
+    s.appendChild(h("p", null, "A font guessing game by justinewin."));
 
     const lives = h("div", "liveline");
     lives.appendChild(h("span", "livelabel", "Lives left:"));

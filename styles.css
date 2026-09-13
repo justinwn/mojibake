@@ -47,7 +47,11 @@
   --px-gold-dk: #b9741a;
   --px-spark: #ffd76e;
 
-  --ui: "DotGothic16", "MS Gothic", "Courier New", monospace;
+  /* Tahoma is the genuine Windows UI face of this era and ships on macOS and
+     Windows alike, so it costs no download and stays legible at 13-15px --
+     which DotGothic16, a 16px bitmap face, does not. Tahoma carries no kanji,
+     so 文字化け falls through to DotGothic16 and keeps its pixel character. */
+  --ui: Tahoma, "DotGothic16", "Segoe UI", Geneva, sans-serif;
   --pix: "Press Start 2P", "DotGothic16", monospace;
   --label: "Zen Kaku Gothic New", ui-sans-serif, system-ui, sans-serif;
 }
@@ -157,7 +161,6 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px 16px 62px;
-  -webkit-font-smoothing: none;
 }
 
 :focus-visible {
@@ -267,7 +270,9 @@ body {
 .canvas {
   position: relative;
   background: var(--paper);
-  min-height: 430px;
+  /* Tracks the viewport so a short window does not start out already too
+     tall for the screen. */
+  min-height: clamp(210px, 44vh, 430px);
   display: grid;
   place-items: center;
   padding: 26px 28px;
@@ -521,15 +526,20 @@ body {
 
 /* ---------- sheets ---------- */
 
+/* In flow, not absolute. An absolutely positioned panel cannot make the canvas
+   grow, so on a short screen tall content was trapped scrolling inside a fixed
+   430px box. In flow it simply makes the window taller. */
 .sheet {
-  position: absolute;
-  inset: 0;
+  width: 100%;
   background: var(--paper);
   display: flex;
   padding: 20px;
-  overflow-y: auto;
   z-index: 3;
 }
+
+/* The word behind a sheet must not reserve space, or the canvas keeps a
+   word-sized hole under the panel. */
+.canvas.sheeted .word { display: none; }
 
 /* `margin: auto` centres the contents when they fit and lets them scroll from
    the top when they don't -- `justify-content: center` would clip the heading. */
@@ -1052,6 +1062,20 @@ body {
 /* Below this the centred window would sit on top of the shortcuts. */
 @media (max-width: 1120px) {
   .desktop-icons { display: none; }
+}
+
+/* Short viewports: the score screen has to fit without the page scrolling, so
+   the trophy and type step down rather than pushing the buttons off-screen. */
+@media (max-height: 720px) {
+  .trophy-tile { width: 124px; height: 124px; }
+  .trophy { width: 88px; }
+  .result { gap: 18px; margin-bottom: 12px; }
+  .sheetin { gap: 8px; }
+  .sheet { padding: 14px 18px; }
+  .sheet h2 { font-size: clamp(14px, 3vw, 19px); }
+  .bigscore { font-size: clamp(26px, 6.5vw, 42px); }
+  .sheet p { font-size: 14px; line-height: 1.45; }
+  .btn { padding: 6px 20px; font-size: 15px; }
 }
 
 @media (max-width: 620px) {

@@ -143,7 +143,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
 
   bevel(ctx, winX + pad + 12, cy + 14, 34, 34, { raised: true, t: 3 });
   text(ctx, "\u6587\u5b57\u5316\u3051 \u2014 mojibake.exe", winX + pad + 62, cy + tbH / 2, {
-    font: "34px DotGothic16, monospace", fill: C.titleInk, baseline: "middle",
+    font: "34px Tahoma, DotGothic16, sans-serif", fill: C.titleInk, baseline: "middle",
   });
 
   let bx = winX + winW - pad - 16;
@@ -151,7 +151,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
     bx -= 44;
     bevel(ctx, bx, cy + 13, 40, 36, { raised: true, t: 3 });
     text(ctx, glyph, bx + 20, cy + 32, {
-      font: "22px DotGothic16, monospace", fill: C.ink,
+      font: "22px Tahoma, DotGothic16, sans-serif", fill: C.ink,
       align: "center", baseline: "middle",
     });
     bx -= 5;
@@ -160,7 +160,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
 
   // Menu bar.
   text(ctx, "File   Edit   View   Font   Help", winX + pad + 6, cy + menuH / 2, {
-    font: "30px DotGothic16, monospace", fill: C.ink, baseline: "middle",
+    font: "30px Tahoma, DotGothic16, sans-serif", fill: C.ink, baseline: "middle",
   });
   cy += menuH;
 
@@ -200,7 +200,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   ty += gapToRun;
   const plural = rounds === 1 ? "" : "s";
   text(ctx, `${rounds} round${plural} in ${formatElapsed(elapsedMs)}`, midX, ty, {
-    font: "34px DotGothic16, monospace", fill: C.inkSoft, align: "center",
+    font: "34px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, align: "center",
   });
 
   cy += paperH + 8;
@@ -215,7 +215,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
     const x = paperX + i * (cellW + 8);
     bevel(ctx, x, cy, cellW, cellH, { raised: false, t: 4 });
     text(ctx, k, x + 18, cy + cellH / 2, {
-      font: "28px DotGothic16, monospace", fill: C.inkSoft, baseline: "middle",
+      font: "28px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, baseline: "middle",
     });
     text(ctx, v, x + 130, cy + cellH / 2, {
       font: "24px 'Press Start 2P', monospace", fill: C.ink, baseline: "middle",
@@ -225,7 +225,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   cy += cellH + 8;
   bevel(ctx, paperX, cy, cellW, cellH, { raised: false, t: 4 });
   text(ctx, "Lives", paperX + 18, cy + cellH / 2, {
-    font: "28px DotGothic16, monospace", fill: C.inkSoft, baseline: "middle",
+    font: "28px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, baseline: "middle",
   });
   // A finished run always ends on empty hearts; that is what game over means.
   for (let i = 0; i < MAX_MISTAKES; i++) {
@@ -234,7 +234,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
 
   bevel(ctx, paperX + cellW + 8, cy, cellW, cellH, { raised: false, t: 4 });
   text(ctx, "Time", paperX + cellW + 26, cy + cellH / 2, {
-    font: "28px DotGothic16, monospace", fill: C.inkSoft, baseline: "middle",
+    font: "28px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, baseline: "middle",
   });
   text(ctx, formatElapsed(elapsedMs), paperX + cellW + 138, cy + cellH / 2, {
     font: "24px 'Press Start 2P', monospace", fill: C.ink, baseline: "middle",
@@ -242,7 +242,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
 
   // --- footer ---
   text(ctx, "Guess the font at", midX, H - 130, {
-    font: "30px DotGothic16, monospace", fill: "rgba(255,255,255,0.85)",
+    font: "30px Tahoma, DotGothic16, sans-serif", fill: "rgba(255,255,255,0.85)",
     align: "center",
   });
   text(ctx, SITE, midX, H - 80, {
