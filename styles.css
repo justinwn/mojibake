@@ -1,0 +1,819 @@
+/* Mojibake — a lavender Windows desktop, circa 1998.
+   Everything is square. Depth comes from two-tone bevels (white highlight on
+   the top/left, shadow on the bottom/right), never from radius or blur. */
+
+:root {
+  /* Purple on one diagonal, pink on the other, white for every work surface. */
+  --desktop: #a98ada;
+  --desktop-2: #f0aad6;
+  --dots: rgba(88, 36, 116, 0.15);
+
+  --face: #f6ebf9;
+  --face-hi: #fffafd;
+  --face-lo: #e0cbe8;
+
+  --title-a: #6f2f96;
+  --title-b: #e668ae;
+  --title-ink: #ffffff;
+  --title-off: #e7bfdc;
+
+  --bevel-hi: #ffffff;
+  --bevel-lo: #5d2874;
+  --bevel-mid: #cfaede;
+
+  --paper: #ffffff;
+  --paper-ink: #331647;
+
+  --ink: #331647;
+  --ink-soft: #7d5490;
+
+  --accent: #9c2f8e;
+  --good: #12866a;
+  --good-fill: #b4f2df;
+  --bad: #d41c63;
+  --bad-fill: #ffd0e2;
+
+  /* Sprite palette. Yellow is warmed toward the pinks so the face belongs. */
+  --px-line: #3d1a52;
+  --px-yellow: #ffd23f;
+  --px-pink: #ff8fc5;
+  --px-magenta: #c9227e;
+  --px-white: #ffffff;
+  --px-screen: #c9a9e6;
+  --px-body: #e9d8f2;
+  --px-grey: #a98cc4;
+
+  --ui: "DotGothic16", "MS Gothic", "Courier New", monospace;
+  --pix: "Press Start 2P", "DotGothic16", monospace;
+  --label: "Zen Kaku Gothic New", ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desktop: #2b1244;
+    --desktop-2: #55184c;
+    --dots: rgba(255, 190, 240, 0.13);
+
+    --face: #452654;
+    --face-hi: #5c3670;
+    --face-lo: #2e1839;
+
+    --title-a: #4a1663;
+    --title-b: #b8408c;
+    --title-ink: #fff0fa;
+    --title-off: #d29ac2;
+
+    --bevel-hi: #8a5a9e;
+    --bevel-lo: #1b0a26;
+    --bevel-mid: #5e3a72;
+
+    --paper: #1c0e26;
+    --paper-ink: #fce9fb;
+
+    --ink: #fce9fb;
+    --ink-soft: #cba2d8;
+
+    --accent: #ff9ad8;
+    --good: #4fe3b8;
+    --good-fill: #10453a;
+    --bad: #ff7fb0;
+    --bad-fill: #4d1130;
+
+    --px-line: #12061c;
+    --px-yellow: #ffd23f;
+    --px-pink: #ff8fc5;
+    --px-magenta: #8e1657;
+    --px-white: #f3e2fa;
+    --px-screen: #7b52a0;
+    --px-body: #5e3f78;
+    --px-grey: #8a6aa8;
+  }
+}
+
+:root[data-theme="dark"] {
+  --desktop: #2b1244;
+  --desktop-2: #55184c;
+  --dots: rgba(255, 190, 240, 0.13);
+
+  --face: #452654;
+  --face-hi: #5c3670;
+  --face-lo: #2e1839;
+
+  --title-a: #4a1663;
+  --title-b: #b8408c;
+  --title-ink: #fff0fa;
+  --title-off: #d29ac2;
+
+  --bevel-hi: #8a5a9e;
+  --bevel-lo: #1b0a26;
+  --bevel-mid: #5e3a72;
+
+  --paper: #1c0e26;
+  --paper-ink: #fce9fb;
+
+  --ink: #fce9fb;
+  --ink-soft: #cba2d8;
+
+  --accent: #ff9ad8;
+  --good: #4fe3b8;
+  --good-fill: #10453a;
+  --bad: #ff7fb0;
+  --bad-fill: #4d1130;
+
+  --px-line: #12061c;
+  --px-yellow: #ffd23f;
+  --px-pink: #ff8fc5;
+  --px-magenta: #8e1657;
+  --px-white: #f3e2fa;
+  --px-screen: #7b52a0;
+  --px-body: #5e3f78;
+  --px-grey: #8a6aa8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--ui);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 1px 1px, var(--dots) 1px, transparent 0) 0 0 / 16px 16px,
+    linear-gradient(160deg, var(--desktop) 0%, var(--desktop-2) 100%);
+  background-attachment: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px 62px;
+  -webkit-font-smoothing: none;
+}
+
+:focus-visible {
+  outline: 2px dotted var(--ink);
+  outline-offset: 1px;
+}
+
+/* The two bevel primitives the whole interface is built from. */
+.raised {
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+.sunken {
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid), inset -1px -1px 0 var(--face-hi);
+}
+
+/* ---------- window ---------- */
+
+.win {
+  width: min(900px, 100%);
+  background: var(--face);
+  padding: 3px;
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow:
+    inset 1px 1px 0 var(--face-hi),
+    inset -1px -1px 0 var(--bevel-mid),
+    3px 3px 0 rgba(40, 20, 70, 0.36);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 3px 3px 4px;
+  background: linear-gradient(90deg, var(--title-a), var(--title-b));
+}
+
+.favicon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  background:
+    linear-gradient(var(--face-hi), var(--face-lo));
+  border: 1px solid var(--bevel-lo);
+  box-shadow: inset 0 0 0 1px var(--title-ink);
+}
+
+.titlebar h1 {
+  margin: 0;
+  font-family: var(--ui);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--title-ink);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.winbtns { display: flex; gap: 2px; }
+
+.winbtn {
+  width: 20px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-family: var(--ui);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+/* Inert chrome: it sets the scene, it is not a control. */
+.menubar {
+  display: flex;
+  gap: 14px;
+  padding: 2px 7px 3px;
+  font-family: var(--ui);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.menubar u { text-underline-offset: 2px; }
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 3px;
+}
+
+/* ---------- canvas: where the word lives ---------- */
+
+.canvas {
+  position: relative;
+  background: var(--paper);
+  min-height: 430px;
+  display: grid;
+  place-items: center;
+  padding: 26px 28px;
+  overflow: hidden;
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+}
+
+.word {
+  margin: 0;
+  font-size: clamp(38px, 9.5vw, 104px);
+  line-height: 1.08;
+  font-weight: 400;
+  color: var(--paper-ink);
+  text-align: center;
+  text-wrap: balance;
+  word-break: break-word;
+  -webkit-font-smoothing: antialiased;
+  /* No font-family here: set inline per round to the mystery typeface. */
+}
+
+.word.is-hidden { visibility: hidden; }
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--ui);
+  font-size: 15px;
+  color: var(--ink-soft);
+  letter-spacing: 0.12em;
+  background: var(--paper);
+}
+
+/* The miss panel hides the typeface: getting it wrong should not hand you
+   the answer you failed to name. */
+.miss {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: var(--paper);
+  z-index: 2;
+}
+
+/* Shown, not performed: the face simply appears, centred. */
+.miss .face { display: grid; }
+
+.sadface {
+  width: clamp(96px, 22vw, 168px);
+  height: auto;
+  display: block;
+}
+
+.miss .msg {
+  font-family: var(--ui);
+  font-size: clamp(18px, 3.6vw, 28px);
+  letter-spacing: 0.08em;
+  color: var(--bad);
+  text-transform: uppercase;
+}
+
+/* Both pops rise from the foot of the canvas: one shared gesture for gain and
+   loss, and clear of the word and the ":(" rather than crossing them. */
+.pop {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  font-family: var(--pix);
+  font-size: clamp(22px, 4.6vw, 38px);
+  pointer-events: none;
+  z-index: 4;
+  white-space: nowrap;
+  animation: floatUp 1.15s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.pop.gain { color: var(--good); }
+.pop.loss { color: var(--bad); }
+
+@keyframes floatUp {
+  0%   { transform: translate(-50%, 26px) scale(0.72); opacity: 0; }
+  22%  { transform: translate(-50%, 0) scale(1.14); opacity: 1; }
+  60%  { transform: translate(-50%, -26px) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -68px) scale(1); opacity: 0; }
+}
+
+.win.shake { animation: shake 0.36s steps(3, end); }
+
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-6px, 2px); }
+  50% { transform: translate(5px, -2px); }
+  75% { transform: translate(-3px, 1px); }
+}
+
+/* ---------- options ---------- */
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 8px;
+  background: var(--face);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--label);
+  font-size: clamp(15px, 2.2vw, 19px);
+  font-weight: 500;
+  min-width: 0;
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+.opt:hover:not(:disabled) { background: var(--face-hi); }
+
+/* Press: the bevel inverts and the label shifts a pixel, like a real button. */
+.opt:active:not(:disabled) {
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+  padding: 9px 11px 7px 9px;
+}
+
+.opt:disabled { cursor: default; }
+
+.opt .cap {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  font-family: var(--pix);
+  font-size: 11px;
+  color: var(--accent);
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+}
+
+.opt .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opt.correct { background: var(--good-fill); }
+.opt.correct .cap { color: var(--good); }
+.opt.wrong { background: var(--bad-fill); }
+.opt.wrong .cap { color: var(--bad); }
+
+/* ---------- status bar ---------- */
+
+.status {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  gap: 2px;
+  padding: 2px 3px 3px;
+}
+
+.cell {
+  background: var(--face);
+  padding: 3px 8px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+}
+
+.cell .k {
+  font-family: var(--ui);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.cell .v {
+  font-family: var(--pix);
+  font-size: 11px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pips, .hearts { display: flex; align-items: center; gap: 4px; }
+
+.heart { width: 15px; height: auto; display: block; }
+
+/* Lives on the title screen, at reading size. */
+.liveline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.livelabel {
+  font-family: var(--ui);
+  font-size: clamp(15px, 2.6vw, 19px);
+  color: var(--paper-ink);
+}
+
+.liveline .heart { width: 22px; }
+
+.timerwrap { flex-direction: column; align-items: stretch; gap: 2px; padding: 3px 6px 4px; }
+
+.timerrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.bar {
+  height: 8px;
+  background: var(--paper);
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  overflow: hidden;
+}
+
+/* Segmented, like a real progress control of the era. */
+.bar span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background:
+    repeating-linear-gradient(90deg,
+      var(--good) 0 6px, transparent 6px 8px);
+  transform-origin: left center;
+}
+
+.bar span.low {
+  background:
+    repeating-linear-gradient(90deg,
+      var(--bad) 0 6px, transparent 6px 8px);
+}
+
+/* ---------- sheets ---------- */
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  display: flex;
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 3;
+}
+
+/* `margin: auto` centres the contents when they fit and lets them scroll from
+   the top when they don't -- `justify-content: center` would clip the heading. */
+.sheetin {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  text-align: center;
+}
+
+.sheet h2 {
+  margin: 0;
+  font-family: var(--pix);
+  font-size: clamp(17px, 4vw, 26px);
+  color: var(--accent);
+  line-height: 1.5;
+}
+
+.sheet p {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--paper-ink);
+}
+
+.sheet .muted { color: var(--ink-soft); font-size: 14px; }
+
+.bigscore {
+  font-family: var(--pix);
+  font-size: clamp(34px, 9vw, 58px);
+  color: var(--paper-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn {
+  font-family: var(--ui);
+  font-size: 17px;
+  padding: 8px 26px;
+  color: var(--ink);
+  background: var(--face);
+  cursor: pointer;
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+.btn:hover { background: var(--face-hi); }
+
+.btn:active {
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+  padding: 9px 25px 7px 27px;
+}
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: min(340px, 100%);
+  text-align: left;
+}
+
+.form label {
+  font-family: var(--ui);
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.form input,
+.form select {
+  font-family: var(--label);
+  font-size: 16px;
+  padding: 7px 9px;
+  color: var(--paper-ink);
+  background: var(--paper);
+  width: 100%;
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+}
+
+/* ---------- leaderboard ---------- */
+
+.board {
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  max-height: 42vh;
+  overflow-y: auto;
+  text-align: left;
+  background: var(--paper);
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 32px 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-family: var(--label);
+  font-size: 15px;
+  color: var(--paper-ink);
+}
+
+/* Zebra striping instead of card gaps: it is a list control, not a stack. */
+.entry:nth-child(odd) { background: color-mix(in srgb, var(--face) 45%, transparent); }
+
+.entry.you {
+  background: var(--accent);
+  color: var(--title-ink);
+}
+.entry.you .rank { color: var(--title-off); }
+
+.entry .rank {
+  font-family: var(--pix);
+  font-size: 9px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.entry .pts {
+  font-family: var(--pix);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.entry .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.empty {
+  font-family: var(--ui);
+  font-size: 14px;
+  color: var(--ink-soft);
+  padding: 18px 0;
+  text-align: center;
+}
+
+/* ---------- desktop shortcuts ---------- */
+
+.desktop-icons {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.dicon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 76px;
+  text-align: center;
+}
+
+.dicon svg {
+  width: 40px;
+  height: 40px;
+  display: block;
+  filter: drop-shadow(2px 2px 0 rgba(52, 20, 74, 0.32));
+}
+
+.dicon span {
+  font-family: var(--ui);
+  font-size: 13px;
+  line-height: 1.3;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 rgba(58, 22, 82, 0.85);
+}
+
+/* ---------- taskbar ---------- */
+
+.taskbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  background: var(--face);
+  border-top: 2px solid var(--bevel-hi);
+  font-family: var(--ui);
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.startbtn,
+.task,
+.tray {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 9px;
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+.startbtn { font-weight: 700; }
+
+.startlogo,
+.trayicon {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, var(--title-b), var(--title-a));
+  border: 1px solid var(--bevel-lo);
+}
+
+/* The open window, shown pressed-in the way an active task is. */
+.task {
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tray {
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+  font-variant-numeric: tabular-nums;
+}
+
+.tray-btn {
+  margin-left: auto;
+  width: 30px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-family: var(--ui);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--face);
+  cursor: pointer;
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+.tray-btn.off { color: var(--ink-soft); }
+
+.tray-btn:active {
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+}
+
+/* Visible to screen readers only. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hidden { display: none !important; }
+
+/* Declared here rather than relying on the host page's reset: `.win` and
+   `.taskbar` set `display: flex`, which outranks the UA rule for [hidden]. */
+[hidden] { display: none !important; }
+
+/* Below this the centred window would sit on top of the shortcuts. */
+@media (max-width: 1120px) {
+  .desktop-icons { display: none; }
+}
+
+@media (max-width: 620px) {
+  .options { grid-template-columns: 1fr; }
+  .status { grid-template-columns: 1fr 1fr; }
+  .canvas { min-height: 200px; }
+  .menubar { font-size: 13px; gap: 10px; }
+  .task { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

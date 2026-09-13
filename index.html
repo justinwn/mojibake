@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Mojibake — a font guessing game</title>
+<meta name="description" content="The word is the name of a font. It is set in a different one. Name the typeface you can actually see.">
+
+<meta property="og:title" content="Mojibake">
+<meta property="og:description" content="The word is the name of a font. It is set in a different one. Name the typeface you can actually see.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%236f2f96'/><text y='12' x='8' text-anchor='middle' font-size='11' fill='%23ffd23f' font-family='monospace'>M</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Non-ASCII is written as numeric entities throughout: a served charset the
+     page does not control must never be able to garble the chrome. -->
+<!-- Desktop shortcuts. Wallpaper, not controls: inert and hidden from AT. -->
+<div class="desktop-icons" id="desktop-icons" aria-hidden="true"></div>
+
+<main class="win" id="win" hidden>
+  <div class="titlebar">
+    <span class="favicon" aria-hidden="true"></span>
+    <h1 id="wintitle">&#x6587;&#x5B57;&#x5316;&#x3051; &#x2014; mojibake.exe</h1>
+    <div class="winbtns" aria-hidden="true">
+      <span class="winbtn">&#x2013;</span>
+      <span class="winbtn">&#x25A1;</span>
+      <span class="winbtn">&#x2715;</span>
+    </div>
+  </div>
+
+  <div class="menubar" aria-hidden="true">
+    <span><u>F</u>ile</span>
+    <span><u>E</u>dit</span>
+    <span><u>V</u>iew</span>
+    <span>F<u>o</u>nt</span>
+    <span><u>H</u>elp</span>
+  </div>
+
+  <div class="body">
+    <div class="canvas" id="canvas">
+      <p class="word" id="word"></p>
+      <div class="loading hidden" id="loading">LOADING TYPEFACE&#x2026;</div>
+      <!-- Covers the word on a miss: the typeface is withheld, not revealed. -->
+      <div class="miss hidden" id="miss"></div>
+
+      <!-- Intro / game over / leaderboard all render into this one sheet. -->
+      <div class="sheet hidden" id="sheet"></div>
+    </div>
+
+    <div class="options" id="options" role="group" aria-label="Which typeface is this?"></div>
+  </div>
+
+  <div class="status">
+    <div class="cell">
+      <span class="k">Round</span>
+      <span class="v" id="s-round">&#x2014;</span>
+    </div>
+    <div class="cell">
+      <span class="k">Score</span>
+      <span class="v" id="s-score">0</span>
+    </div>
+    <div class="cell">
+      <span class="k">Lives</span>
+      <span class="pips" id="s-pips"></span>
+    </div>
+    <div class="cell timerwrap">
+      <div class="timerrow">
+        <span class="k">Time</span>
+        <span class="v" id="s-time">&#x2014;</span>
+      </div>
+      <div class="bar"><span id="s-bar"></span></div>
+    </div>
+  </div>
+</main>
+
+<div class="taskbar" id="taskbar">
+  <span class="startbtn"><span class="startlogo" aria-hidden="true"></span>Start</span>
+  <span class="task">&#x6587; mojibake.exe</span>
+  <button class="tray-btn" id="sound" type="button" aria-pressed="false">
+    <span id="sound-ico" aria-hidden="true">&#x266A;</span>
+    <span class="sr">Sound</span>
+  </button>
+  <span class="tray"><span class="trayicon" aria-hidden="true"></span><span id="clock">--:--</span></span>
+</div>
+
+<noscript>
+  <p style="font-family:monospace;color:#331647;background:#fff;padding:16px;margin:16px;">
+    Mojibake needs JavaScript to run.
+  </p>
+</noscript>
+
+<script type="module" src="src/ui.js"></script>
+</body>
+</html>
