@@ -8,6 +8,7 @@ import { createLeaderboard, sanitizeHandle } from "./leaderboard.js";
 import { COUNTRIES, flagFor } from "./countries.js";
 import { createAudio } from "./audio.js";
 import { sprite, SAD_FACE, HEART, HEART_EMPTY, DESKTOP_ICONS } from "./pixel.js";
+import { DOCS, DEFAULT_DOC } from "./legal.js";
 
 const sfx = createAudio();
 
@@ -20,18 +21,97 @@ const el = {
   time: $("s-time"), bar: $("s-bar"),
   taskbar: $("taskbar"), clock: $("clock"),
   icons: $("desktop-icons"), sound: $("sound"), soundIco: $("sound-ico"),
+  notepad: $("notepad"), npTabs: $("np-tabs"), npBody: $("np-body"),
+  npUrl: $("np-url"), npTitle: $("np-title"), npTask: $("np-task"),
+  npMin: $("np-min"), npClose: $("np-close"),
 };
 
 function renderDesktopIcons() {
-  for (const { name, grid } of DESKTOP_ICONS) {
-    const item = document.createElement("div");
-    item.className = "dicon";
+  for (const { name, grid, action } of DESKTOP_ICONS) {
+    // Icons that open something are real buttons; the rest stay wallpaper.
+    const item = document.createElement(action ? "button" : "div");
+    item.className = "dicon" + (action ? " dicon-btn" : "");
+    if (action) {
+      item.type = "button";
+      item.addEventListener("click", () => openNotepad());
+    } else {
+      item.setAttribute("aria-hidden", "true");
+    }
     item.appendChild(sprite(grid));
     const label = document.createElement("span");
     label.textContent = name;
     item.appendChild(label);
     el.icons.appendChild(item);
   }
+}
+
+/* ---------------- notepad window ---------------- */
+
+let npDoc = DEFAULT_DOC;
+let npOpen = false;
+
+function docUrl(slug) {
+  return location.origin + location.pathname + "#" + slug;
+}
+
+function renderNotepad() {
+  const doc = DOCS[npDoc];
+
+  el.npTabs.textContent = "";
+  for (const key of Object.keys(DOCS)) {
+    const t = document.createElement("button");
+    t.type = "button";
+    t.role = "tab";
+    t.textContent = DOCS[key].tab;
+    t.setAttribute("aria-selected", String(key === npDoc));
+    t.addEventListener("click", () => openNotepad(key));
+    el.npTabs.appendChild(t);
+  }
+
+  el.npBody.textContent = "";
+  el.npBody.appendChild(h("h3", null, doc.title));
+  el.npBody.appendChild(h("p", "updated", "Last updated: " + doc.updated));
+  for (const block of doc.blocks) {
+    if (block.h) el.npBody.appendChild(h("h4", null, block.h));
+    if (block.p) el.npBody.appendChild(h("p", null, block.p));
+  }
+  el.npBody.scrollTop = 0;
+
+  el.npUrl.textContent = docUrl(doc.slug);
+  el.npTitle.textContent = `From the Creator — ${doc.file}`;
+}
+
+function openNotepad(slug) {
+  if (slug && DOCS[slug]) npDoc = slug;
+  npOpen = true;
+  renderNotepad();
+  el.notepad.hidden = false;
+  el.npTask.hidden = true;
+  if (location.hash.slice(1) !== DOCS[npDoc].slug) {
+    history.replaceState(null, "", "#" + DOCS[npDoc].slug);
+  }
+  el.npBody.focus();
+}
+
+function minimizeNotepad() {
+  el.notepad.hidden = true;
+  el.npTask.hidden = false;
+  el.npTask.focus();
+  // Still "open", just not on screen -- the hash stays so the link survives.
+}
+
+function closeNotepad() {
+  npOpen = false;
+  el.notepad.hidden = true;
+  el.npTask.hidden = true;
+  if (location.hash) history.replaceState(null, "", location.pathname);
+}
+
+function syncNotepadToHash() {
+  const slug = location.hash.slice(1).toLowerCase();
+  const match = Object.keys(DOCS).find((k) => DOCS[k].slug === slug);
+  if (match) openNotepad(match);
+  else if (npOpen) closeNotepad();
 }
 
 function paintSound() {
@@ -396,8 +476,8 @@ function showFinal(entries, highlightId, finalScore, rounds) {
     s.appendChild(h("div", "bigscore", String(finalScore)));
     s.appendChild(h("p", "muted",
       `${rounds} round${rounds === 1 ? "" : "s"} survived · ` +
-      (board.mode === "shared"
-        ? "shared board"
+      (board.mode === "global"
+        ? "global leaderboard"
         : "saved on this device only")));
     renderBoard(s, entries, highlightId);
 
@@ -465,7 +545,12 @@ function showTitle() {
 }
 
 document.addEventListener("keydown", (ev) => {
-  if (phase !== "playing") return;
+  if (ev.key === "Escape" && npOpen && !el.notepad.hidden) {
+    closeNotepad();
+    return;
+  }
+  // The notepad covers the game; number keys belong to it, not to the round.
+  if (phase !== "playing" || (npOpen && !el.notepad.hidden)) return;
   const n = Number(ev.key);
   if (Number.isInteger(n) && n >= 1 && n <= 4) {
     ev.preventDefault();
@@ -495,6 +580,13 @@ async function boot() {
 startClock();
 renderDesktopIcons();
 paintSound();
+
+el.npMin.addEventListener("click", minimizeNotepad);
+el.npClose.addEventListener("click", closeNotepad);
+el.npTask.addEventListener("click", () => openNotepad());
+addEventListener("hashchange", syncNotepadToHash);
+// Deep link: /#privacy and /#terms open straight to that document.
+syncNotepadToHash();
 el.sound.addEventListener("click", () => {
   sfx.toggle();
   paintSound();

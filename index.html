@@ -80,9 +80,41 @@
   </div>
 </main>
 
+<!-- "From the Creator". Opens over the game window; deep-linkable at #privacy
+     and #terms. -->
+<section class="win notepad" id="notepad" role="dialog"
+         aria-labelledby="np-title" hidden>
+  <div class="titlebar">
+    <span class="favicon" aria-hidden="true"></span>
+    <h2 id="np-title">From the Creator &#x2014; notepad.exe</h2>
+    <div class="winbtns">
+      <button class="winbtn" type="button" id="np-min" title="Minimize"
+              aria-label="Minimize">&#x2013;</button>
+      <button class="winbtn" type="button" id="np-close" title="Close"
+              aria-label="Close">&#x2715;</button>
+    </div>
+  </div>
+
+  <div class="menubar" aria-hidden="true">
+    <span><u>F</u>ile</span>
+    <span><u>E</u>dit</span>
+    <span>F<u>o</u>rmat</span>
+    <span><u>H</u>elp</span>
+  </div>
+
+  <div class="np-tabs" id="np-tabs" role="tablist" aria-label="Documents"></div>
+
+  <div class="np-body" id="np-body" role="tabpanel" tabindex="0"></div>
+
+  <div class="status np-status">
+    <div class="cell"><span class="k" id="np-url">&nbsp;</span></div>
+  </div>
+</section>
+
 <div class="taskbar" id="taskbar">
   <span class="startbtn"><span class="startlogo" aria-hidden="true"></span>Start</span>
   <span class="task">&#x6587; mojibake.exe</span>
+  <button class="task task-btn" type="button" id="np-task" hidden>notepad.exe</button>
   <button class="tray-btn" id="sound" type="button" aria-pressed="false">
     <span id="sound-ico" aria-hidden="true">&#x266A;</span>
     <span class="sr">Sound</span>

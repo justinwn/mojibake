@@ -684,6 +684,27 @@ body {
   text-align: center;
 }
 
+/* Only icons that actually open something take pointer events, and they get a
+   selection highlight so they read as controls rather than wallpaper. */
+.dicon-btn {
+  pointer-events: auto;
+  cursor: pointer;
+  background: none;
+  border: 1px dotted transparent;
+  padding: 3px 2px;
+  font: inherit;
+  color: inherit;
+}
+
+.dicon-btn:hover span,
+.dicon-btn:focus-visible span {
+  background: var(--accent);
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.dicon-btn:focus-visible { border-color: #ffffff; outline: none; }
+
 .dicon svg {
   width: 40px;
   height: 40px;
@@ -698,6 +719,113 @@ body {
   color: #ffffff;
   text-shadow: 1px 1px 0 rgba(58, 22, 82, 0.85);
 }
+
+/* ---------- notepad window ---------- */
+
+/* Sits above the game window, offset so the window beneath stays visible. */
+.notepad {
+  position: fixed;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(660px, calc(100vh - 96px));
+}
+
+.notepad .titlebar h2 {
+  margin: 0;
+  font-family: var(--ui);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--title-ink);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notepad .winbtn {
+  cursor: pointer;
+  padding: 0;
+}
+
+.notepad .winbtn:active {
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  box-shadow: inset 1px 1px 0 var(--bevel-mid);
+}
+
+.np-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 3px 0;
+}
+
+.np-tabs button {
+  font-family: var(--ui);
+  font-size: 14px;
+  padding: 5px 14px 6px;
+  color: var(--ink);
+  background: var(--face-lo);
+  cursor: pointer;
+  border: 2px solid;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--face-lo) var(--bevel-hi);
+}
+
+.np-tabs button:hover { background: var(--face); }
+
+/* The selected tab joins the page below it by dropping its bottom edge. */
+.np-tabs button[aria-selected="true"] {
+  background: var(--paper);
+  padding-bottom: 8px;
+  margin-bottom: -2px;
+  color: var(--accent);
+}
+
+.np-body {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--paper);
+  color: var(--paper-ink);
+  margin: 0 3px;
+  padding: 18px 20px 24px;
+  border: 2px solid;
+  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+  font-family: var(--ui);
+  font-size: 15px;
+  line-height: 1.72;
+}
+
+.np-body h3 {
+  margin: 0 0 4px;
+  font-family: var(--pix);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--accent);
+}
+
+.np-body .updated {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.np-body h4 {
+  margin: 20px 0 2px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.np-body p {
+  margin: 0 0 10px;
+  max-width: 62ch;
+}
+
+.np-status .cell { border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); }
+.np-status .k { font-size: 12px; }
 
 /* ---------- taskbar ---------- */
 
@@ -751,6 +879,20 @@ body {
   overflow: hidden;
   white-space: nowrap;
 }
+
+/* A minimized window's taskbar entry: raised, because it is not the front
+   window any more, and clickable to bring it back. */
+.task-btn {
+  font-family: var(--ui);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--face);
+  cursor: pointer;
+  border-color: var(--bevel-hi) var(--bevel-lo) var(--bevel-lo) var(--bevel-hi);
+  box-shadow: inset 1px 1px 0 var(--face-hi), inset -1px -1px 0 var(--bevel-mid);
+}
+
+.task-btn:hover { background: var(--face-hi); }
 
 .tray {
   border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);

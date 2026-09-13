@@ -170,9 +170,30 @@ const TRASH = [
   "................",
 ];
 
+const NOTEPAD = [
+  "................",
+  "..KKKKKKKKKKK...",
+  "..KWWWWWWWWWK...",
+  "..KWGGGGGGGWK...",
+  "..KWWWWWWWWWK...",
+  "..KWGGGGGGGWK...",
+  "..KWWWWWWWWWK...",
+  "..KWGGGGGGGWK...",
+  "..KWWWWWWWWWK...",
+  "..KWGGGGGWWWK...",
+  "..KWWWWWWWWWK...",
+  "..KWGGGGGGGWK...",
+  "..KWWWWWWWWWK...",
+  "..KKKKKKKKKKK...",
+  "................",
+  "................",
+];
+
+// `action` marks an icon as a real control rather than wallpaper.
 export const DESKTOP_ICONS = [
   { name: "My Computer", grid: MY_COMPUTER },
   { name: "Internet", grid: INTERNET },
+  { name: "From the Creator", grid: NOTEPAD, action: "notepad" },
   { name: "Paint.exe", grid: PAINT },
   { name: "Trash", grid: TRASH },
 ];
