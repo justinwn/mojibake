@@ -6,11 +6,11 @@ import { newSeed } from "./rng.js";
 import { loadRoundFonts, prefetchRoundFonts, loadUiFonts } from "./fontload.js";
 import { recordRun } from "./best.js";
 import {
-  renderCard, formatElapsed, canShareImage, fileFor, download,
+  renderCard, formatElapsed, shareMode, shareNow, fileFor, download,
 } from "./sharecard.js";
 import { createAudio } from "./audio.js";
 import {
-  sprite, SAD_FACE, HEART, HEART_EMPTY, TROPHY, SPARKLE, DESKTOP_ICONS,
+  sprite, SAD_FACE, HEART, HEART_EMPTY, TROPHY, SPARKLE, STAR, DESKTOP_ICONS,
 } from "./pixel.js";
 import { DOCS, DEFAULT_DOC } from "./legal.js";
 
@@ -389,8 +389,11 @@ function showGameOver() {
     // The headline already says it when they beat it; this line is for when
     // they did not.
     if (!beat) {
-      col.appendChild(h("p", "muted",
-        `Best: ${best ? best.score.toLocaleString("en-US") : 0}`));
+      const bestLine = h("p", "muted bestline");
+      bestLine.appendChild(sprite(STAR, { cls: "star" }));
+      bestLine.appendChild(h("span", null,
+        `Personal best: ${best ? best.score.toLocaleString("en-US") : 0}`));
+      col.appendChild(bestLine);
     }
     row.appendChild(col);
     s.appendChild(row);
@@ -417,20 +420,24 @@ function showGameOver() {
         return;
       }
       const file = fileFor(blob, finalScore);
-      const shareable = canShareImage(file);
+      // Decided now, not at click time: navigator.share needs transient
+      // activation, so nothing may be awaited between the click and the call.
+      const mode = shareMode(file);
       share.disabled = false;
-      share.addEventListener("click", async () => {
-        if (!shareable) {
-          download(blob, finalScore);
-          note.textContent = "Saved to your downloads.";
-          return;
-        }
-        try {
-          await navigator.share({ files: [file], title: "Mojibake" });
-        } catch (err) {
-          // Dismissing the share sheet is a normal outcome, not a failure.
-          if (err && err.name !== "AbortError") download(blob, finalScore);
-        }
+      share.addEventListener("click", () => {
+        shareNow(mode, { file, blob, score: finalScore }).then(
+          (what) => {
+            if (what === "downloaded") {
+              note.textContent = "Saved to your downloads.";
+            }
+          },
+          (err) => {
+            // Dismissing the OS dialog is a normal outcome, not a failure.
+            if (err && err.name === "AbortError") return;
+            download(blob, finalScore);
+            note.textContent = "Couldn't open the share dialog — saved to your downloads.";
+          }
+        );
       });
     });
 

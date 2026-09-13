@@ -221,6 +221,19 @@ export const TROPHY = [
   "...KKKKKKKKKK...",
 ];
 
+export const STAR = [
+  ".....KK....",
+  ".....KK....",
+  "....KOOK...",
+  "KKKKKOOKKKK",
+  "KOOOOOOOOOK",
+  ".KOOOOOOOK.",
+  "..KOOOOOK..",
+  ".KOOKKKOOK.",
+  ".KOK...KOK.",
+  "..K.....K..",
+];
+
 export const SPARKLE = [
   "...A...",
   "...A...",

@@ -253,11 +253,51 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
 }
 
 
-/** Can this device hand the image to another app? */
+export const SHARE_URL = "https://" + SITE;
+
+/**
+ * Which route this browser can take, decided BEFORE the click.
+ *
+ * navigator.share needs transient activation: it must be reached from the
+ * click handler with no await in front of it, or the browser rejects the call.
+ * So the decision cannot involve any async work at share time.
+ *
+ *   "files"    - native OS dialog, image attached
+ *   "url"      - native OS dialog, link only (no file support here)
+ *   "download" - no Web Share API at all; save the PNG instead
+ */
+export function shareMode(file) {
+  if (typeof navigator.share !== "function") return "download";
+  if (navigator.canShare && navigator.canShare({ files: [file] })) return "files";
+  return "url";
+}
+
+/** Kept for callers that only want to know whether the image itself travels. */
 export function canShareImage(file) {
-  return Boolean(
-    navigator.canShare && navigator.share && navigator.canShare({ files: [file] })
-  );
+  return shareMode(file) === "files";
+}
+
+/**
+ * Open the native share dialog. MUST be called directly from a click handler,
+ * with nothing awaited first. Resolves to what actually happened.
+ */
+export function shareNow(mode, { file, blob, score }) {
+  const text = `I scored ${score.toLocaleString("en-US")} on Mojibake.`;
+
+  if (mode === "files") {
+    // Deliberately no `url`: some platforms reject a payload that mixes files
+    // with a link, and the card already carries the address.
+    return navigator.share({ files: [file], title: "Mojibake", text })
+      .then(() => "shared");
+  }
+
+  if (mode === "url") {
+    return navigator.share({ title: "Mojibake", text, url: SHARE_URL })
+      .then(() => "shared");
+  }
+
+  download(blob, score);
+  return Promise.resolve("downloaded");
 }
 
 export function fileFor(blob, score) {

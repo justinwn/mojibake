@@ -644,6 +644,15 @@ body {
 
 .result-text h2 { margin: 0; }
 
+.bestline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.star { width: 16px; height: auto; display: block; flex: none; }
+
 .runline {
   font-family: var(--ui);
   font-size: clamp(15px, 2.6vw, 19px);

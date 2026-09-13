@@ -36,6 +36,7 @@ Then open <http://localhost:4179>. A plain static server works too, but `devserv
 `no-store` and an explicit UTF-8 charset, which avoids stale-module and encoding headaches.
 
 ```bash
+node tools/check_imports.mjs # every named import resolves (no build step to catch this)
 node tools/test_replay.mjs   # scoring and round-generation regression tests
 python3 tools/build_pool.py  # regenerate fonts.json from the Google Fonts catalog
 ```
@@ -89,9 +90,11 @@ Two details worth knowing:
   `font-display` and cannot reflow once a face arrives late, so without it the card silently
   renders in a system fallback.
 
-Where the browser can hand a file to another app, the button reads **Share score** and opens the
-native share sheet; everywhere else it reads **Save image** and downloads. The label always names
-what actually happens.
+**Share score** opens the operating system's own share dialog, taking three routes in order of
+preference: the image itself where the browser can hand files to other apps, a link where it
+supports sharing but not files, and a plain download where there is no Web Share API at all.
+Which route applies is decided when the screen mounts, never at click time — `navigator.share`
+requires transient activation, so awaiting anything first makes the browser refuse the call.
 
 There is no leaderboard and no backend. Your best score lives in `localStorage`, and the image is
 generated on your device and never uploaded.
