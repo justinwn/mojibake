@@ -12,6 +12,10 @@ const PALETTE = {
   S: "var(--px-screen)",
   B: "var(--px-body)",
   G: "var(--px-grey)",
+  O: "var(--px-gold)",
+  N: "var(--px-gold-lt)",
+  D: "var(--px-gold-dk)",
+  A: "var(--px-spark)",
 };
 
 /** Build an <svg> from a grid of characters. "." is transparent. */
@@ -197,3 +201,58 @@ export const DESKTOP_ICONS = [
   { name: "Paint.exe", grid: PAINT },
   { name: "Trash", grid: TRASH },
 ];
+
+export const TROPHY = [
+  ".KKKKKKKKKKKKKK.",
+  ".KNNNNNNNNNNNNK.",
+  "KKOOOOOOOOOOOOKK",
+  "KOKOOOOOOOOOOKOK",
+  "KOKNOOOOOOOODKOK",
+  "KOKNOOOOOOOODKOK",
+  "KOKNOOOOOOOODKOK",
+  "KKKNOOOOOOOODKKK",
+  "..KNOOOOOOOODK..",
+  "..KKNOOOOOODKK..",
+  "...KKNOOOODKK...",
+  ".....KOOOOK.....",
+  ".....KOOOOK.....",
+  "...KKKOOOOKKK...",
+  "...KNNNNNNNNK...",
+  "...KKKKKKKKKK...",
+];
+
+export const SPARKLE = [
+  "...A...",
+  "...A...",
+  "..AAA..",
+  "AAAWAAA",
+  "..AAA..",
+  "...A...",
+  "...A...",
+];
+
+/**
+ * Draw a grid onto a canvas. `colors` maps grid letters to real colour values:
+ * the CSS custom properties above cannot be resolved in a canvas, and the
+ * share card wants a fixed palette anyway so the image looks the same for
+ * everyone regardless of the viewer's theme.
+ */
+export function drawSprite(ctx, grid, x, y, scale, colors) {
+  for (let row = 0; row < grid.length; row++) {
+    let col = 0;
+    while (col < grid[row].length) {
+      const ch = grid[row][col];
+      if (ch === ".") { col++; continue; }
+      // Merge horizontal runs, as sprite() does: fewer fills, and no hairline
+      // seams between adjacent rectangles.
+      let len = 1;
+      while (col + len < grid[row].length && grid[row][col + len] === ch) len++;
+      const fill = colors[ch];
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(x + col * scale, y + row * scale, len * scale, scale);
+      }
+      col += len;
+    }
+  }
+}

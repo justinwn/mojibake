@@ -1,9 +1,9 @@
 // Game state machine and run replay.
 //
-// The single most important property in this file: a run is fully described by
-// its seed plus a log of {round, choice, ms}. Score is never stored as a claim
-// anywhere -- it is recomputed by replaying that log. `replayRun` below is the
-// same code path the leaderboard uses to validate somebody else's entry.
+// The key property here: a run is fully described by its seed plus a log of
+// {round, choice, ms}, so `replayRun` can recompute any score from scratch.
+// Nothing ships that depends on it today, but it is the regression cover for
+// the scoring arithmetic and round-generation determinism (tools/test_replay.mjs).
 
 import { createRoundGen, scoreFor, secondsForTier } from "./rounds.js";
 import { GEN_VERSION } from "./rng.js";

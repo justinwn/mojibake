@@ -23,8 +23,8 @@ export function secondsForTier(tier) {
   return TIER_SECONDS[tier];
 }
 
-// Pure and integer-only: the leaderboard recomputes this from the run log, so
-// it must give the same answer on every machine, forever.
+// Pure and integer-only, so replayRun() recomputes exactly the same total from
+// a run log on any machine.
 export function scoreFor({ tier, msElapsed, seconds, streak }) {
   const limit = seconds * 1000;
   const remaining = Math.max(0, limit - msElapsed);

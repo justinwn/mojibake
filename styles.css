@@ -42,6 +42,10 @@
   --px-screen: #c9a9e6;
   --px-body: #e9d8f2;
   --px-grey: #a98cc4;
+  --px-gold: #efae1f;
+  --px-gold-lt: #ffdf87;
+  --px-gold-dk: #b9741a;
+  --px-spark: #ffd76e;
 
   --ui: "DotGothic16", "MS Gothic", "Courier New", monospace;
   --pix: "Press Start 2P", "DotGothic16", monospace;
@@ -87,6 +91,10 @@
     --px-screen: #7b52a0;
     --px-body: #5e3f78;
     --px-grey: #8a6aa8;
+    --px-gold: #f5b833;
+    --px-gold-lt: #ffe9a3;
+    --px-gold-dk: #a85f14;
+    --px-spark: #ffe08a;
   }
 }
 
@@ -128,6 +136,10 @@
   --px-screen: #7b52a0;
   --px-body: #5e3f78;
   --px-grey: #8a6aa8;
+  --px-gold: #f5b833;
+  --px-gold-lt: #ffe9a3;
+  --px-gold-dk: #a85f14;
+  --px-spark: #ffe08a;
 }
 
 * { box-sizing: border-box; }
@@ -579,145 +591,69 @@ body {
 
 .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
-.form {
+/* ---------- score card screen ---------- */
+
+.result {
   display: flex;
-  flex-direction: column;
-  gap: 7px;
-  width: min(340px, 100%);
-  text-align: left;
-}
-
-.form label {
-  font-family: var(--ui);
-  font-size: 14px;
-  color: var(--ink-soft);
-}
-
-.form input,
-.form select {
-  font-family: var(--label);
-  font-size: 16px;
-  padding: 7px 9px;
-  color: var(--paper-ink);
-  background: var(--paper);
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
   width: 100%;
-  border: 2px solid;
-  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
 }
 
-/* ---------- leaderboard ---------- */
+/* The pale tile the trophy sits on, straight from the mock. */
+.trophy-tile {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 188px;
+  height: 188px;
+  background: color-mix(in srgb, var(--face) 55%, var(--paper));
+}
 
-.board {
-  width: min(440px, 100%);
+.trophy { width: 132px; height: auto; display: block; }
+
+.spark {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+  animation: twinkle 2.4s ease-in-out infinite;
+}
+
+.spark-1 { top: 10px; right: 16px; animation-delay: 0s; }
+.spark-2 { bottom: 22px; left: 12px; width: 18px; height: 18px; animation-delay: 0.8s; }
+.spark-3 { top: 52px; left: 22px; width: 14px; height: 14px; animation-delay: 1.6s; }
+
+/* Compositor-only: no layout, no paint of anything underneath. */
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  18%      { opacity: 1; transform: scale(1) rotate(25deg); }
+  46%      { opacity: 0; transform: scale(0.5) rotate(45deg); }
+}
+
+.result-text {
   display: flex;
   flex-direction: column;
-  max-height: 42vh;
-  overflow-y: auto;
-  text-align: left;
-  background: var(--paper);
-  border: 2px solid;
-  border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
-}
-
-.entry {
-  display: grid;
-  grid-template-columns: 32px 22px 1fr auto;
   align-items: center;
   gap: 8px;
-  padding: 5px 8px;
-  font-family: var(--label);
-  font-size: 15px;
-  color: var(--paper-ink);
+  min-width: 0;
 }
 
-/* Zebra striping instead of card gaps: it is a list control, not a stack. */
-.entry:nth-child(odd) { background: color-mix(in srgb, var(--face) 45%, transparent); }
+.result-text h2 { margin: 0; }
 
-.entry.you {
-  background: var(--accent);
-  color: var(--title-ink);
-}
-.entry.you .rank { color: var(--title-off); }
-
-.entry .rank {
-  font-family: var(--pix);
-  font-size: 9px;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-.entry .pts {
-  font-family: var(--pix);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.entry .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.empty {
+.runline {
   font-family: var(--ui);
-  font-size: 14px;
+  font-size: clamp(15px, 2.6vw, 19px);
   color: var(--ink-soft);
-  padding: 18px 0;
-  text-align: center;
+  margin: 0;
 }
 
-/* ---------- desktop shortcuts ---------- */
-
-.desktop-icons {
-  position: fixed;
-  top: 18px;
-  left: 18px;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  pointer-events: none;
-}
-
-.dicon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  width: 76px;
-  text-align: center;
-}
-
-/* Only icons that actually open something take pointer events, and they get a
-   selection highlight so they read as controls rather than wallpaper. */
-.dicon-btn {
-  pointer-events: auto;
-  cursor: pointer;
-  background: none;
-  border: 1px dotted transparent;
-  padding: 3px 2px;
-  font: inherit;
-  color: inherit;
-}
-
-.dicon-btn:hover span,
-.dicon-btn:focus-visible span {
-  background: var(--accent);
-  color: #ffffff;
-  text-shadow: none;
-}
-
-.dicon-btn:focus-visible { border-color: #ffffff; outline: none; }
-
-.dicon svg {
-  width: 40px;
-  height: 40px;
-  display: block;
-  filter: drop-shadow(2px 2px 0 rgba(52, 20, 74, 0.32));
-}
-
-.dicon span {
-  font-family: var(--ui);
-  font-size: 13px;
-  line-height: 1.3;
-  color: #ffffff;
-  text-shadow: 1px 1px 0 rgba(58, 22, 82, 0.85);
+@media (max-width: 560px) {
+  .trophy-tile { width: 140px; height: 140px; }
+  .trophy { width: 96px; }
 }
 
 /* ---------- notepad window ---------- */

@@ -1,10 +1,9 @@
 // Seeded PRNG.
 //
-// STABILITY CONTRACT: a leaderboard entry stores only its seed, and every
-// viewer re-derives the entire round sequence from it to recompute the score.
-// Changing anything in this file, or the order in which rounds.js consumes
-// numbers from it, silently invalidates every stored run. If that ever has to
-// happen, bump GEN_VERSION so old entries are rejected rather than mis-scored.
+// STABILITY CONTRACT: a whole run is reproducible from its seed alone, which
+// is what lets tools/test_replay.mjs verify scoring end to end. Changing
+// anything here, or the order in which rounds.js consumes numbers from it,
+// changes every sequence. Bump GEN_VERSION if that ever has to happen.
 export const GEN_VERSION = 1;
 
 // cyrb128: string -> four well-mixed 32-bit seeds.

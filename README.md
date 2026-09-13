@@ -7,6 +7,8 @@ different one**. Name the typeface you can actually see, not the one you're read
 
 Rounds are unlimited and get harder as you go. Three mistakes ends the run.
 
+**Play it: <https://justinwn.github.io/mojibake/>**
+
 ## Playing
 
 Click an option or press <kbd>1</kbd>–<kbd>4</kbd>. The clock only starts once the typeface has
@@ -34,9 +36,8 @@ Then open <http://localhost:4179>. A plain static server works too, but `devserv
 `no-store` and an explicit UTF-8 charset, which avoids stale-module and encoding headaches.
 
 ```bash
-node tools/test_replay.mjs     # score-replay and anti-tamper tests
-node tools/test_sanitize.mjs   # handle sanitising
-python3 tools/build_pool.py    # regenerate fonts.json from the Google Fonts catalog
+node tools/test_replay.mjs   # scoring and round-generation regression tests
+python3 tools/build_pool.py  # regenerate fonts.json from the Google Fonts catalog
 ```
 
 ## How it's built
@@ -52,14 +53,11 @@ src/rounds.js       tier curve, lookalike distractor selection
 src/fontload.js     subsetted Google Fonts loading
 src/game.js         state machine, scoring, run log, replay validator
 src/ui.js           screens, input, animation, notepad window
-src/leaderboard.js  storage + run verification
-src/supabase.js     PostgREST calls (no SDK)
-src/config.js       backend credentials — blank means local-only
+src/sharecard.js    the shareable PNG, drawn with Canvas 2D
+src/best.js         personal best in localStorage
 src/legal.js        Privacy and Terms copy
 src/pixel.js        pixel-art sprites, drawn from character grids
 src/audio.js        sound clips
-src/countries.js    ISO country list (flags derived from the code)
-supabase/schema.sql tables, constraints, RLS, rate limiting
 tools/              build + test scripts
 ```
 
@@ -70,46 +68,33 @@ round, not just the correct one — otherwise the Network tab would hand over th
 request is glyph-subset to just the word being shown (`&text=`), so four families cost about
 800 bytes.
 
-**Scores are replayed, not trusted.** A leaderboard entry stores the run's random seed plus a
-log of `{round, choice, ms}` — never a bare score. The entire round sequence is deterministic
-from that seed, so any client can re-simulate the run, replay the log, and recompute the score,
-rejecting anything that doesn't reconcile or that shows inhuman reaction times.
+**A whole run is reproducible from one number.** The round sequence is derived deterministically
+from a seed, and every answer is logged as `{round, choice, ms}`, so `replayRun()` can recompute
+any score from scratch. Nothing ships that depends on it today, but it is what
+`tools/test_replay.mjs` uses to hold the scoring arithmetic and the round generator still across
+26 cases.
 
-This raises forgery from "type a number into the console" to "write a bot that genuinely plays
-the game well." It is **not** cryptographically cheat-proof, and cannot be: the page runs on the
-player's machine. Real resistance needs a server that issues and grades rounds.
+## The score card
 
-## The global leaderboard
+Lose three lives and the game draws a shareable PNG — 1080x1920, portrait, sized for stories.
+The card *is* the game window: same chrome, same palette, same sprites, with a status bar reading
+your real round, tier, score and time. It is drawn with Canvas 2D and no library.
 
-Out of the box the board is kept in `localStorage` and is per-device — the game says "saved on
-this device only" rather than implying a global ranking. Point it at Supabase and it becomes a
-real global top 100.
+Two details worth knowing:
 
-**1.** Create a project at [supabase.com](https://supabase.com), then open the SQL editor and run
-[`supabase/schema.sql`](supabase/schema.sql). It is idempotent, so re-running it is safe.
+- The card is rendered when the score screen mounts, **not** in the button's click handler. iOS
+  only honours `navigator.share` when the user gesture reaches it directly, and awaiting
+  `canvas.toBlob()` inside the handler breaks that chain.
+- `await document.fonts.ready` runs before the first `fillText`. Canvas has no equivalent of
+  `font-display` and cannot reflow once a face arrives late, so without it the card silently
+  renders in a system fallback.
 
-**2.** Put the project URL and anon key into `src/config.js`:
+Where the browser can hand a file to another app, the button reads **Share score** and opens the
+native share sheet; everywhere else it reads **Save image** and downloads. The label always names
+what actually happens.
 
-```js
-export const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-export const SUPABASE_ANON_KEY = "eyJ...";
-```
-
-Both belong in the repository. The anon key is designed to be public — it identifies the project,
-not you, and Row Level Security is what protects the data. **Never** put the `service_role` key
-here; that one bypasses RLS entirely.
-
-### How it's protected
-
-Postgres enforces *shape*: RLS lets anyone read scores and insert one, but nobody update or
-delete, so rows are immutable once written. Table constraints reject impossible values (including
-`score <= rounds * 825`, the arithmetic ceiling of a real run), and a trigger re-sanitises the
-handle server-side and rate-limits submissions to one per 15s and 20 per hour, keyed on a one-way
-hash of the address that is pruned after two hours.
-
-The browser enforces *truth*: Postgres can't replay a run — that needs the font pool and the
-game's own logic — so each client re-simulates every entry from its seed and hides any whose
-score doesn't reconcile.
+There is no leaderboard and no backend. Your best score lives in `localStorage`, and the image is
+generated on your device and never uploaded.
 
 ## From the Creator
 

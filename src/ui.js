@@ -1,13 +1,17 @@
-// Screen orchestration: intro -> rounds -> game over -> leaderboard.
+// Screen orchestration: intro -> rounds -> score card.
 
 import { createGame, MAX_MISTAKES, TIMEOUT_CHOICE } from "./game.js";
-import { TIER_LABELS } from "./rounds.js";
+import { TIER_LABELS, tierForRound } from "./rounds.js";
 import { newSeed } from "./rng.js";
 import { loadRoundFonts, prefetchRoundFonts, loadUiFonts } from "./fontload.js";
-import { createLeaderboard, sanitizeHandle } from "./leaderboard.js";
-import { COUNTRIES, flagFor } from "./countries.js";
+import { recordRun } from "./best.js";
+import {
+  renderCard, formatElapsed, canShareImage, fileFor, download,
+} from "./sharecard.js";
 import { createAudio } from "./audio.js";
-import { sprite, SAD_FACE, HEART, HEART_EMPTY, DESKTOP_ICONS } from "./pixel.js";
+import {
+  sprite, SAD_FACE, HEART, HEART_EMPTY, TROPHY, SPARKLE, DESKTOP_ICONS,
+} from "./pixel.js";
 import { DOCS, DEFAULT_DOC } from "./legal.js";
 
 const sfx = createAudio();
@@ -149,7 +153,6 @@ const WRONG_MESSAGES = [
 ];
 
 let data = null;
-let board = null;
 let game = null;
 let pendingRun = null;
 let phase = "boot";
@@ -348,145 +351,87 @@ function h(tag, cls, text) {
   return n;
 }
 
-function renderBoard(parent, entries, highlightId) {
-  const wrap = h("div", "board");
-  if (!entries.length) {
-    wrap.appendChild(h("div", "empty", "No scores yet. Be the first."));
-  }
-  entries.forEach((e, i) => {
-    const row = h("div", "entry" + (e.id === highlightId ? " you" : ""));
-    row.appendChild(h("span", "rank", String(i + 1).padStart(2, "0")));
-    row.appendChild(h("span", null, e.country ? flagFor(e.country) : "🏳️"));
-    row.appendChild(h("span", "nm", e.handle));
-    row.appendChild(h("span", "pts", String(e.score)));
-    wrap.appendChild(row);
-  });
-  parent.appendChild(wrap);
-}
-
-async function showGameOver() {
+function showGameOver() {
   phase = "over";
   const run = pendingRun;
   const finalScore = shownScore;
   const rounds = run.log.length;
-  // The run is over either way; a top-100 finish upgrades this to the score
-  // fanfare once the board comes back.
-  sfx.play("gameover");
+  const elapsedMs = run.submittedAt - run.startedAt;
+  const tier = tierForRound(rounds);
+  const { best, isNew } = recordRun(finalScore, rounds);
+
+  sfx.play(finalScore > 0 ? "score" : "gameover");
+
+  // The card is rendered NOW, not in the click handler: iOS only honours
+  // navigator.share when the user gesture reaches it directly, and awaiting
+  // toBlob() inside the handler breaks that chain.
+  const cardPromise = renderCard({ score: finalScore, rounds, tier, elapsedMs })
+    .catch(() => null);
 
   sheet((s) => {
-    s.appendChild(h("h2", null, "GAME OVER"));
-    s.appendChild(h("div", "bigscore", String(finalScore)));
-    s.appendChild(h("p", null,
-      `${rounds} round${rounds === 1 ? "" : "s"} survived.`));
-    s.appendChild(h("p", "muted", "Checking the board…"));
-  });
+    const row = h("div", "result");
 
-  let entries = [];
-  try {
-    entries = await board.top();
-  } catch {
-    entries = [];
-  }
-
-  if (board.qualifies(finalScore, entries)) {
-    showNameForm(run, finalScore, rounds, entries);
-  } else {
-    showFinal(entries, null, finalScore, rounds);
-  }
-}
-
-function showNameForm(run, finalScore, rounds, entries) {
-  sfx.play("score");
-  sheet((s) => {
-    s.appendChild(h("h2", null, "TOP 100!"));
-    s.appendChild(h("div", "bigscore", String(finalScore)));
-    s.appendChild(h("p", null, "Claim your place on the board."));
-
-    const form = document.createElement("form");
-    form.className = "form";
-
-    const lh = h("label", null, "Handle");
-    lh.htmlFor = "handle";
-    const input = document.createElement("input");
-    input.id = "handle";
-    input.maxLength = 14;
-    input.required = true;
-    input.autocomplete = "off";
-    input.placeholder = "AAA";
-
-    const lc = h("label", null, "Country");
-    lc.htmlFor = "country";
-    const select = document.createElement("select");
-    select.id = "country";
-    for (const c of COUNTRIES) {
-      const o = document.createElement("option");
-      o.value = c.code;
-      o.textContent = `${c.flag}  ${c.name}`;
-      select.appendChild(o);
+    const tile = h("div", "trophy-tile");
+    tile.appendChild(sprite(TROPHY, { cls: "trophy" }));
+    for (let i = 0; i < 3; i++) {
+      const sp = sprite(SPARKLE, { cls: "spark spark-" + (i + 1) });
+      tile.appendChild(sp);
     }
-    // A sensible default from the browser's own locale, still changeable.
-    const guess = (navigator.language || "").split("-")[1];
-    if (guess) select.value = guess.toUpperCase();
+    row.appendChild(tile);
 
-    const submit = h("button", "btn", "Save score");
-    submit.type = "submit";
+    const col = h("div", "result-text");
+    col.appendChild(h("h2", null, "Nicely done!"));
+    col.appendChild(h("div", "bigscore", finalScore.toLocaleString("en-US")));
+    const plural = rounds === 1 ? "" : "s";
+    col.appendChild(h("p", "runline",
+      `${rounds} round${plural} in ${formatElapsed(elapsedMs)}`));
+    col.appendChild(h("p", "muted", isNew && finalScore > 0
+      ? "New personal best!"
+      : `Best: ${best ? best.score.toLocaleString("en-US") : 0}`));
+    row.appendChild(col);
+    s.appendChild(row);
 
-    // Saving is optional: never trap someone on this screen to play again.
-    const again = h("button", "btn ghost", "Play again");
-    again.type = "button";
-    again.addEventListener("click", playAgain);
+    s.appendChild(h("p", null, "Share your best score or play again."));
 
     const buttons = h("div", "row");
-    buttons.append(submit, again);
-
-    const err = h("p", "muted", "");
-
-    form.append(lh, input, lc, select, buttons, err);
-    form.addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      const handle = sanitizeHandle(input.value);
-      if (!handle) {
-        err.textContent = "Pick a handle of at least one character.";
-        return;
-      }
-      submit.disabled = true;
-      submit.textContent = "Saving…";
-      try {
-        await board.submit(run, handle, select.value);
-        const fresh = await board.top();
-        const mine = fresh.find(
-          (e) => e.handle === handle && e.score === finalScore
-        );
-        showFinal(fresh, mine ? mine.id : null, finalScore, rounds);
-      } catch (e) {
-        submit.disabled = false;
-        submit.textContent = "Save score";
-        err.textContent = "Could not save that score. " + (e.message || "");
-      }
-    });
-
-    s.appendChild(form);
-    setTimeout(() => input.focus(), 30);
-  });
-}
-
-function showFinal(entries, highlightId, finalScore, rounds) {
-  sheet((s) => {
-    s.appendChild(h("h2", null, "GAME OVER"));
-    s.appendChild(h("div", "bigscore", String(finalScore)));
-    s.appendChild(h("p", "muted",
-      `${rounds} round${rounds === 1 ? "" : "s"} survived · ` +
-      (board.mode === "global"
-        ? "global leaderboard"
-        : "saved on this device only")));
-    renderBoard(s, entries, highlightId);
-
+    const share = h("button", "btn", "Share score");
+    share.type = "button";
+    share.disabled = true;
     const again = h("button", "btn", "Play again");
     again.type = "button";
     again.addEventListener("click", playAgain);
-    const row = h("div", "row");
-    row.appendChild(again);
-    s.appendChild(row);
+    buttons.append(share, again);
+    s.appendChild(buttons);
+
+    const note = h("p", "muted", "");
+    s.appendChild(note);
+
+    cardPromise.then((blob) => {
+      if (!blob) {
+        share.textContent = "Save image";
+        note.textContent = "The score image could not be created.";
+        return;
+      }
+      const file = fileFor(blob, finalScore);
+      const shareable = canShareImage(file);
+      // The label always names what the button actually does.
+      share.textContent = shareable ? "Share score" : "Save image";
+      share.disabled = false;
+      share.addEventListener("click", async () => {
+        if (!shareable) {
+          download(blob, finalScore);
+          note.textContent = "Saved to your downloads.";
+          return;
+        }
+        try {
+          await navigator.share({ files: [file], title: "Mojibake" });
+        } catch (err) {
+          // Dismissing the share sheet is a normal outcome, not a failure.
+          if (err && err.name !== "AbortError") download(blob, finalScore);
+        }
+      });
+    });
+
     setTimeout(() => again.focus(), 30);
   });
 }
@@ -569,7 +514,6 @@ async function boot() {
 
   const res = await fetch("fonts.json");
   data = await res.json();
-  board = await createLeaderboard(data);
 
   el.win.hidden = false;
   showTitle();
