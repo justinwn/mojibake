@@ -420,7 +420,9 @@ function showGameOver() {
   // The card is rendered NOW, not in the click handler: iOS only honours
   // navigator.share when the user gesture reaches it directly, and awaiting
   // toBlob() inside the handler breaks that chain.
-  const cardPromise = renderCard({ score: finalScore, rounds, tier, elapsedMs })
+  const cardPromise = renderCard({
+    score: finalScore, rounds, tier, elapsedMs, theme: currentTheme(),
+  })
     .catch(() => null);
 
   sheet((s) => {

@@ -17,41 +17,63 @@ const SITE = "mojibake.justinewin.com";
 const W = 1080;
 const H = 1920;
 
-// Mirrors the light theme in styles.css. Kept together so a colour change in
-// one place is obvious in the other.
-const C = {
-  desktop: "#a98ada",
-  desktop2: "#f0aad6",
-  face: "#f6ebf9",
-  faceHi: "#fffafd",
-  bevelHi: "#ffffff",
-  bevelLo: "#5d2874",
-  bevelMid: "#cfaede",
-  titleA: "#6f2f96",
-  titleB: "#e668ae",
-  titleInk: "#ffffff",
-  paper: "#ffffff",
-  ink: "#331647",
-  inkSoft: "#7d5490",
-  accent: "#9c2f8e",
+// Mirrors the two theme blocks in styles.css. Kept side by side so a colour
+// change in one place is obvious in the other.
+const PALETTES = {
+  light: {
+    desktop: "#a98ada",
+    desktop2: "#f0aad6",
+    face: "#f6ebf9",
+    faceHi: "#fffafd",
+    bevelHi: "#ffffff",
+    bevelLo: "#5d2874",
+    bevelMid: "#cfaede",
+    titleA: "#6f2f96",
+    titleB: "#e668ae",
+    titleInk: "#ffffff",
+    paper: "#ffffff",
+    ink: "#331647",
+    inkSoft: "#7d5490",
+    accent: "#9c2f8e",
+    footer: "rgba(255,255,255,0.85)",
+    footerStrong: "#ffffff",
+  },
+  dark: {
+    desktop: "#2b1244",
+    desktop2: "#55184c",
+    face: "#452654",
+    faceHi: "#5c3670",
+    bevelHi: "#8a5a9e",
+    bevelLo: "#1b0a26",
+    bevelMid: "#5e3a72",
+    titleA: "#4a1663",
+    titleB: "#b8408c",
+    titleInk: "#fff0fa",
+    paper: "#1c0e26",
+    ink: "#fce9fb",
+    inkSoft: "#cba2d8",
+    accent: "#ff9ad8",
+    footer: "rgba(255,236,250,0.75)",
+    footerStrong: "#ffecfa",
+  },
 };
 
-const SPRITE_COLORS = {
-  K: "#3d1a52",
-  O: "#efae1f",
-  N: "#ffdf87",
-  D: "#b9741a",
-  M: "#c9227e",
-  P: "#ff8fc5",
-  G: "#a98cc4",
-  A: "#ffd76e",
-  W: "#ffffff",
+const SPRITES = {
+  light: {
+    K: "#3d1a52", O: "#efae1f", N: "#ffdf87", D: "#b9741a",
+    M: "#c9227e", P: "#ff8fc5", G: "#a98cc4", A: "#ffd76e", W: "#ffffff",
+  },
+  dark: {
+    K: "#12061c", O: "#f5b833", N: "#ffe9a3", D: "#a85f14",
+    M: "#8e1657", P: "#ff8fc5", G: "#8a6aa8", A: "#ffe08a", W: "#f3e2fa",
+  },
 };
 
 /** The two-tone bevel every control in the game is built from. */
-function bevel(ctx, x, y, w, h, { raised = true, fill = C.face, t = 4 } = {}) {
+function bevel(ctx, C, x, y, w, h, { raised = true, fill = null, t = 4 } = {}) {
   const hi = raised ? C.bevelHi : C.bevelLo;
   const lo = raised ? C.bevelLo : C.bevelHi;
+  fill = fill || C.face;
   ctx.fillStyle = fill;
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = hi;
@@ -84,7 +106,10 @@ export function formatElapsed(ms) {
  * in a fallback face -- canvas has no equivalent of font-display, and no way to
  * reflow once the real face arrives.
  */
-export async function renderCard({ score, rounds, tier, elapsedMs }) {
+export async function renderCard({ score, rounds, tier, elapsedMs, theme }) {
+  // The card remembers the theme the run was played in.
+  const C = PALETTES[theme === "dark" ? "dark" : "light"];
+  const SPRITE_COLORS = SPRITES[theme === "dark" ? "dark" : "light"];
   try {
     await document.fonts.ready;
   } catch {
@@ -128,9 +153,11 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
     pad + tbH + 6 + menuH + paperH + 8 + cellH + 8 + cellH + pad;
   const winY = Math.round((H - winH) / 2) - 40;
 
-  ctx.fillStyle = "rgba(40, 20, 70, 0.32)";
+  ctx.fillStyle = theme === "dark"
+    ? "rgba(0, 0, 0, 0.42)"
+    : "rgba(40, 20, 70, 0.32)";
   ctx.fillRect(winX + 10, winY + 10, winW, winH);
-  bevel(ctx, winX, winY, winW, winH, { raised: true, t: 5 });
+  bevel(ctx, C, winX, winY, winW, winH, { raised: true, t: 5 });
 
   let cy = winY + pad;
 
@@ -141,7 +168,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   ctx.fillStyle = tb;
   ctx.fillRect(winX + pad, cy, winW - pad * 2, tbH);
 
-  bevel(ctx, winX + pad + 12, cy + 14, 34, 34, { raised: true, t: 3 });
+  bevel(ctx, C, winX + pad + 12, cy + 14, 34, 34, { raised: true, t: 3 });
   text(ctx, "\u6587\u5b57\u5316\u3051 \u2014 mojibake.exe", winX + pad + 62, cy + tbH / 2, {
     font: "34px Tahoma, DotGothic16, sans-serif", fill: C.titleInk, baseline: "middle",
   });
@@ -149,7 +176,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   let bx = winX + winW - pad - 16;
   for (const glyph of ["\u2715", "\u25A1", "\u2013"]) {
     bx -= 44;
-    bevel(ctx, bx, cy + 13, 40, 36, { raised: true, t: 3 });
+    bevel(ctx, C, bx, cy + 13, 40, 36, { raised: true, t: 3 });
     text(ctx, glyph, bx + 20, cy + 32, {
       font: "22px Tahoma, DotGothic16, sans-serif", fill: C.ink,
       align: "center", baseline: "middle",
@@ -167,7 +194,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   // --- paper area ---
   const paperX = winX + pad;
   const paperW = winW - pad * 2;
-  bevel(ctx, paperX, cy, paperW, paperH, { raised: false, fill: C.paper, t: 4 });
+  bevel(ctx, C, paperX, cy, paperW, paperH, { raised: false, fill: C.paper, t: 4 });
 
   const midX = W / 2;
 
@@ -213,7 +240,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   ];
   cells.forEach(([k, v], i) => {
     const x = paperX + i * (cellW + 8);
-    bevel(ctx, x, cy, cellW, cellH, { raised: false, t: 4 });
+    bevel(ctx, C, x, cy, cellW, cellH, { raised: false, t: 4 });
     text(ctx, k, x + 18, cy + cellH / 2, {
       font: "28px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, baseline: "middle",
     });
@@ -223,7 +250,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   });
 
   cy += cellH + 8;
-  bevel(ctx, paperX, cy, cellW, cellH, { raised: false, t: 4 });
+  bevel(ctx, C, paperX, cy, cellW, cellH, { raised: false, t: 4 });
   text(ctx, "Lives", paperX + 18, cy + cellH / 2, {
     font: "28px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, baseline: "middle",
   });
@@ -232,7 +259,7 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
     drawSprite(ctx, HEART_EMPTY, paperX + 130 + i * 46, cy + 22, 4, SPRITE_COLORS);
   }
 
-  bevel(ctx, paperX + cellW + 8, cy, cellW, cellH, { raised: false, t: 4 });
+  bevel(ctx, C, paperX + cellW + 8, cy, cellW, cellH, { raised: false, t: 4 });
   text(ctx, "Time", paperX + cellW + 26, cy + cellH / 2, {
     font: "28px Tahoma, DotGothic16, sans-serif", fill: C.inkSoft, baseline: "middle",
   });
@@ -242,11 +269,11 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
 
   // --- footer ---
   text(ctx, "Guess the font at", midX, H - 130, {
-    font: "30px Tahoma, DotGothic16, sans-serif", fill: "rgba(255,255,255,0.85)",
+    font: "30px Tahoma, DotGothic16, sans-serif", fill: C.footer,
     align: "center",
   });
   text(ctx, SITE, midX, H - 80, {
-    font: "30px 'Press Start 2P', monospace", fill: "#ffffff", align: "center",
+    font: "30px 'Press Start 2P', monospace", fill: C.footerStrong, align: "center",
   });
 
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));

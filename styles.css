@@ -148,8 +148,25 @@
 
 * { box-sizing: border-box; }
 
-/* Without this iOS keeps the double-tap-zoom heuristic alive on every control,
-   which makes taps feel unresponsive or drop entirely. */
+/* iOS turns a slightly slow tap on text into a text SELECTION: the loupe and
+   the selection handles appear and the click never fires, so the button is
+   simply dead. Nothing about the layout causes it, and nothing else prevents
+   it. Interface chrome is never worth selecting -- the notepad body is, and
+   opts back in below. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.np-body,
+.np-body * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Without touch-action iOS also keeps the double-tap-zoom heuristic alive,
+   which delays or drops taps. */
 button, .opt, .btn, .dicon-btn, .winbtn, .task-btn, .tray-btn {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -1099,6 +1116,8 @@ body {
 
 @media (max-width: 620px) {
   .options { grid-template-columns: 1fr; }
+  .btn { min-height: 44px; padding: 10px 22px; }
+  .opt { min-height: 48px; }
   .status { grid-template-columns: 1fr 1fr; }
   .canvas { min-height: 200px; }
   .menubar { font-size: 13px; gap: 10px; }
