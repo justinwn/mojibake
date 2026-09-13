@@ -33,6 +33,7 @@ const el = {
 };
 
 function renderDesktopIcons() {
+  if (!el.icons) return;
   for (const { name, grid, action } of DESKTOP_ICONS) {
     // Icons that open something are real buttons; the rest stay wallpaper.
     const item = document.createElement(action ? "button" : "div");
@@ -136,6 +137,7 @@ function currentTheme() {
 function paintTheme() {
   const now = currentTheme();
   document.documentElement.setAttribute("data-theme", now);
+  if (!el.theme) return;
   const next = now === "dark" ? "light" : "dark";
   el.theme.textContent = "";
   // The icon shows what you get by pressing it, not the state you are in.
@@ -156,6 +158,7 @@ function toggleTheme() {
 }
 
 function paintSound() {
+  if (!el.sound || !el.soundIco) return;
   const on = !sfx.muted;
   el.soundIco.textContent = on ? "♪" : "✕";
   el.sound.setAttribute("aria-pressed", on ? "false" : "true");
@@ -165,6 +168,7 @@ function paintSound() {
 
 // A real clock in the system tray — the one piece of chrome that isn't a prop.
 function startClock() {
+  if (!el.clock) return;
   const paint = () => {
     el.clock.textContent = new Date().toLocaleTimeString([], {
       hour: "2-digit", minute: "2-digit",
@@ -587,43 +591,70 @@ document.addEventListener("visibilitychange", () => {
 
 async function boot() {
   loadUiFonts();
-
-  const res = await fetch("fonts.json");
-  data = await res.json();
-
   el.win.hidden = false;
+
+  try {
+    const res = await fetch("fonts.json");
+    if (!res.ok) throw new Error(`fonts.json: ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    // Say so on screen. Silently leaving an empty window looks identical to
+    // the page being broken, and gives nobody anything to act on.
+    console.error("Could not load the font pool:", err);
+    sheet((s) => {
+      s.appendChild(h("h2", null, "OUT OF ORDER"));
+      s.appendChild(h("p", null, "The font list could not be loaded."));
+      s.appendChild(h("p", "muted", "Check your connection and reload."));
+    });
+    return;
+  }
+
   showTitle();
 }
 
-// Desktop chrome is independent of the game: it should be there from the
-// first frame, not wait on fonts.json.
-startClock();
-renderDesktopIcons();
-paintTheme();
-paintSound();
-el.theme.addEventListener("click", toggleTheme);
-
-// Follow the system until the player states a preference of their own.
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-  let stored = null;
-  try { stored = localStorage.getItem(THEME_KEY); } catch { /* ignore */ }
-  if (!stored) paintTheme();
-});
-
-el.npMin.addEventListener("click", minimizeNotepad);
-el.npClose.addEventListener("click", closeNotepad);
-el.npTask.addEventListener("click", () => openNotepad());
-addEventListener("hashchange", syncNotepadToHash);
-// Deep link: /#privacy and /#terms open straight to that document.
-syncNotepadToHash();
-el.sound.addEventListener("click", () => {
-  sfx.toggle();
-  paintSound();
-});
-
-// The title music is requested before the page has seen a gesture, so browsers
-// block it. Start it on the first interaction instead of losing it.
-for (const ev of ["pointerdown", "keydown"]) {
-  addEventListener(ev, () => sfx.resume(), { once: false, passive: true });
-}
+// Boot FIRST, and never behind anything that can throw. The desktop chrome is
+// decoration; the game is the point. A stale cached index.html paired with a
+// fresh ui.js is enough to make one of these elements null, and when that
+// happened mid-setup the exception stopped boot() from ever running -- leaving
+// a desktop with icons, a clock, and no game window at all.
 boot();
+
+function setupChrome() {
+  startClock();
+  renderDesktopIcons();
+  paintTheme();
+  paintSound();
+
+  el.theme?.addEventListener("click", toggleTheme);
+  el.sound?.addEventListener("click", () => {
+    sfx.toggle();
+    paintSound();
+  });
+  el.npMin?.addEventListener("click", minimizeNotepad);
+  el.npClose?.addEventListener("click", closeNotepad);
+  el.npTask?.addEventListener("click", () => openNotepad());
+
+  addEventListener("hashchange", syncNotepadToHash);
+  // Deep link: /#privacy and /#terms open straight to that document.
+  syncNotepadToHash();
+
+  // Follow the system until the player states a preference of their own.
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    let stored = null;
+    try { stored = localStorage.getItem(THEME_KEY); } catch { /* ignore */ }
+    if (!stored) paintTheme();
+  });
+
+  // The title music is requested before the page has seen a gesture, so
+  // browsers block it. Start it on the first interaction instead of losing it.
+  for (const ev of ["pointerdown", "keydown"]) {
+    addEventListener(ev, () => sfx.resume(), { passive: true });
+  }
+}
+
+try {
+  setupChrome();
+} catch (err) {
+  // Worth seeing in the console, never worth breaking the game over.
+  console.error("Desktop chrome failed to initialise:", err);
+}
