@@ -380,14 +380,18 @@ function showGameOver() {
     row.appendChild(tile);
 
     const col = h("div", "result-text");
-    col.appendChild(h("h2", null, "Nicely done!"));
+    const beat = isNew && finalScore > 0;
+    col.appendChild(h("h2", null, beat ? "NEW PERSONAL BEST!" : "NICELY DONE!"));
     col.appendChild(h("div", "bigscore", finalScore.toLocaleString("en-US")));
     const plural = rounds === 1 ? "" : "s";
     col.appendChild(h("p", "runline",
       `${rounds} round${plural} in ${formatElapsed(elapsedMs)}`));
-    col.appendChild(h("p", "muted", isNew && finalScore > 0
-      ? "New personal best!"
-      : `Best: ${best ? best.score.toLocaleString("en-US") : 0}`));
+    // The headline already says it when they beat it; this line is for when
+    // they did not.
+    if (!beat) {
+      col.appendChild(h("p", "muted",
+        `Best: ${best ? best.score.toLocaleString("en-US") : 0}`));
+    }
     row.appendChild(col);
     s.appendChild(row);
 
@@ -408,14 +412,12 @@ function showGameOver() {
 
     cardPromise.then((blob) => {
       if (!blob) {
-        share.textContent = "Save image";
+        share.disabled = true;
         note.textContent = "The score image could not be created.";
         return;
       }
       const file = fileFor(blob, finalScore);
       const shareable = canShareImage(file);
-      // The label always names what the button actually does.
-      share.textContent = shareable ? "Share score" : "Save image";
       share.disabled = false;
       share.addEventListener("click", async () => {
         if (!shareable) {

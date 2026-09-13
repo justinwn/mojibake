@@ -7,7 +7,7 @@ different one**. Name the typeface you can actually see, not the one you're read
 
 Rounds are unlimited and get harder as you go. Three mistakes ends the run.
 
-**Play it: <https://justinwn.github.io/mojibake/>**
+**Play it: <https://mojibake.justinewin.com/>**
 
 ## Playing
 

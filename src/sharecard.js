@@ -7,12 +7,12 @@
 // from CSS custom properties: a shared image should look the same for
 // everyone, not flip to dark mode because of the sender's system setting.
 
-import { TROPHY, HEART, HEART_EMPTY, drawSprite } from "./pixel.js";
+import { TROPHY, HEART_EMPTY, SPARKLE, drawSprite } from "./pixel.js";
 import { TIER_LABELS } from "./rounds.js";
 import { MAX_MISTAKES } from "./game.js";
 
 // Shown on the card so a shared image can be traced back to the game.
-const SITE = "justinwn.github.io/mojibake";
+const SITE = "mojibake.justinewin.com";
 
 const W = 1080;
 const H = 1920;
@@ -44,6 +44,8 @@ const SPRITE_COLORS = {
   M: "#c9227e",
   P: "#ff8fc5",
   G: "#a98cc4",
+  A: "#ffd76e",
+  W: "#ffffff",
 };
 
 /** The two-tone bevel every control in the game is built from. */
@@ -172,13 +174,22 @@ export async function renderCard({ score, rounds, tier, elapsedMs }) {
   // Trophy on its own pale tile, as in the mock.
   const tileX = midX - trophyPx / 2 - 40;
   const tileY = cy + (paperH - contentH) / 2;
-  ctx.fillStyle = "#f4f2f6";
-  ctx.fillRect(tileX, tileY, trophyPx + 80, tileH);
   drawSprite(ctx, TROPHY, tileX + 40, tileY + 40, scale, SPRITE_COLORS);
 
+  // Sparkles at the three positions the score screen animates through, frozen
+  // at different sizes so the still frame still reads as "twinkling".
+  const sparks = [
+    [tileX + trophyPx + 26, tileY + 30, 7],
+    [tileX + 10, tileY + tileH - 78, 5],
+    [tileX + 4, tileY + 58, 4],
+  ];
+  for (const [sx, sy, ss] of sparks) {
+    drawSprite(ctx, SPARKLE, sx, sy, ss, SPRITE_COLORS);
+  }
+
   let ty = tileY + tileH + gapToTitle;
-  text(ctx, "Nicely done!", midX, ty, {
-    font: "40px 'Press Start 2P', monospace", fill: C.accent, align: "center",
+  text(ctx, "I SCORED", midX, ty, {
+    font: "44px 'Press Start 2P', monospace", fill: C.accent, align: "center",
   });
 
   ty += gapToScore;
